@@ -16,7 +16,7 @@ from os import listdir
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY)
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,9 +74,9 @@ class AirCO2ntrolReader:
             if data[0] == 0x50:
                 carbonDioxide = value
             elif data[0] == 0x42:
-                temperature = value / 16.0 - 273.15
+                temperature = round(value / 16.0 - 273.15, 1)
             elif data[0] == 0x41:
-                humidity = value / 100
+                humidity = round(value / 100)
 
             if carbonDioxide is not None and temperature is not None and humidity is not None:
                 break
@@ -117,7 +117,7 @@ def hexArrayToString(array):
     return '[' + ','.join('{:02x}'.format(x) for x in array) + ']'
 
 
-class AirCO2ntrolCarbonDioxideSensor(Entity):
+class AirCO2ntrolCarbonDioxideSensor(SensorEntity):
     """A AirCO2ntrol carbon dioxide sensor."""
 
     def __init__(self, state):
@@ -130,14 +130,24 @@ class AirCO2ntrolCarbonDioxideSensor(Entity):
         return 'AirCO2ntrol Carbon Dioxide'
 
     @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return "hidraw0_co2"
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state.carbonDioxide
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return "ppm"
+
+    @property
+    def native_value(self):
+        """Return the units of measurement."""
+        return float
 
     @property
     def device_class(self):
@@ -154,7 +164,7 @@ class AirCO2ntrolCarbonDioxideSensor(Entity):
         _LOGGER.debug("Updating airco2ntrol for carbon dioxide")
         self._state.update()
 
-class AirCO2ntrolTemperatureSensor(Entity):
+class AirCO2ntrolTemperatureSensor(SensorEntity):
     """A AirCO2ntrol temperature sensor."""
 
     def __init__(self, state):
@@ -167,14 +177,24 @@ class AirCO2ntrolTemperatureSensor(Entity):
         return 'AirCO2ntrol Temperature'
 
     @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return "hidraw0_temperature"
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state.temperature
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return TEMP_CELSIUS
+
+    @property
+    def native_value(self):
+        """Return the units of measurement."""
+        return float
 
     @property
     def device_class(self):
@@ -191,7 +211,7 @@ class AirCO2ntrolTemperatureSensor(Entity):
         _LOGGER.debug("Updating airco2ntrol for temperature")
         self._state.update()
 
-class AirCO2ntrolHumiditySensor(Entity):
+class AirCO2ntrolHumiditySensor(SensorEntity):
     """A AirCO2ntrol Humidity sensor."""
 
     def __init__(self, state):
@@ -204,14 +224,24 @@ class AirCO2ntrolHumiditySensor(Entity):
         return 'AirCO2ntrol Humidity'
 
     @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return "hidraw0_humidity"
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state.humidity
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return "%"
+
+    @property
+    def native_value(self):
+        """Return the units of measurement."""
+        return float
 
     @property
     def device_class(self):
