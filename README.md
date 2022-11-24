@@ -6,8 +6,8 @@ A [low cost](https://www.amazon.de/gp/product/B01DY30PG8/) usb CO2 and Temperatu
 
 Idea based on "[Reverse-Engineering a low-cost USB CO₂ monitor](https://hackaday.io/project/5301-reverse-engineering-a-low-cost-usb-co-monitor)"
 and "[office weather](https://github.com/wooga/office_weather)".
-Thx [Henryk Plötz](https://hackaday.io/henryk). Code for this HA integration originally taken from [jansauer](https://github.com/jansauer/home-assistant_config/tree/master/config/custom_components/airco2ntrol). 
-But because the "Decryption" part isn't necessary anymore with the current generation of devices I removed that. 
+Thx [Henryk Plötz](https://hackaday.io/henryk). Code for this HA integration originally taken from [jansauer](https://github.com/jansauer/home-assistant_config/tree/master/config/custom_components/airco2ntrol).
+But because the "Decryption" part isn't necessary anymore with the current generation of devices I removed that.
 
 Add to your configuration.yaml following plattform:
 ```
@@ -23,8 +23,10 @@ sensor:
 In the sensor.py following variable can be changed if you have multiple hidraw devices connected:
 - **device** Hidraw device node. (default = '/dev/hidraw0')
 
+## Docker
+
+When running Home Assistant in a docker container you can use the `--device=/dev/hidraw0:/dev/hidraw0` parameter to allow access to the device without having to run in privileged mode.
+
 ## Developers notice
 The pdf in this repository describes the usb protocol. There exists more than just co2 and temperature readings.
 Some devices appear to have a humidity reading but mine does only display "0" for humidity (opcode: 0x41).
-
-
