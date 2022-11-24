@@ -15,7 +15,7 @@ import voluptuous as vol
 from os import listdir
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
+from homeassistant.const import (DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +40,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     state = AirCO2ntrolReader()
     add_entities([
       AirCO2ntrolCarbonDioxideSensor(state),
-      AirCO2ntrolTemperatureSensor(state)
+      AirCO2ntrolTemperatureSensor(state),
+      AirCO2ntrolHumiditySensor(state)
     ])
     return True
 
@@ -52,12 +53,14 @@ class AirCO2ntrolReader:
         """Initialize the reader."""
         self.carbonDioxide = None
         self.temperature = None
+        self.humidity = None
         self._fp = None
 
     def update(self):
         """Poll latest sensor data."""
         carbonDioxide = None
         temperature = None
+        humidity = None
 
         for pollDeviceForCorrectData in range(10):
             data = self.__save_poll()
@@ -72,14 +75,18 @@ class AirCO2ntrolReader:
                 carbonDioxide = value
             elif data[0] == 0x42:
                 temperature = value / 16.0 - 273.15
+            elif data[0] == 0x41:
+                humidity = value / 100
 
-            if carbonDioxide is not None and temperature is not None:
+            if carbonDioxide is not None and temperature is not None and humidity is not None:
                 break
 
         self.temperature = temperature
         self.carbonDioxide = carbonDioxide
+        self.humidity = humidity
         _LOGGER.info('temperature measurement = ' + str(self.temperature))
         _LOGGER.info('carbonDioxide measurement = ' + str(self.carbonDioxide))
+        _LOGGER.info('humidity measurement = ' + str(self.humidity))
 
 
 
@@ -146,7 +153,7 @@ class AirCO2ntrolCarbonDioxideSensor(Entity):
         """Get the latest data and updates the state."""
         _LOGGER.debug("Updating airco2ntrol for carbon dioxide")
         self._state.update()
-      
+
 class AirCO2ntrolTemperatureSensor(Entity):
     """A AirCO2ntrol temperature sensor."""
 
@@ -182,4 +189,41 @@ class AirCO2ntrolTemperatureSensor(Entity):
     def update(self):
         """Get the latest data and updates the state."""
         _LOGGER.debug("Updating airco2ntrol for temperature")
+        self._state.update()
+
+class AirCO2ntrolHumiditySensor(Entity):
+    """A AirCO2ntrol Humidity sensor."""
+
+    def __init__(self, state):
+        """Initialize the sensor."""
+        self._state = state
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return 'AirCO2ntrol Humidity'
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state.humidity
+
+    @property
+    def unit_of_measurement(self):
+        """Return the units of measurement."""
+        return "%"
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_HUMIDITY
+
+    @property
+    def icon(self):
+        """Return the icon of device based on its type."""
+        return 'mdi:water-percent'
+
+    def update(self):
+        """Get the latest data and updates the state."""
+        _LOGGER.debug("Updating airco2ntrol for humidity")
         self._state.update()
